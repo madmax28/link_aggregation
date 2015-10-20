@@ -1,10 +1,10 @@
 BUILD_DIR=build
 APP_NAME=aggregator
-SOURCES=$(wildcard *.cpp)
-HEADERS=$(wildcard *.hpp)
+LIBRARIES=-lnetfilter_queue -lnfnetlink
+SOURCES=$(wildcard *.cc)
+HEADERS=$(wildcard *.h)
 
 TARGET=$(addprefix $(BUILD_DIR)/, $(APP_NAME))
-
 
 GXX=g++
 
@@ -18,7 +18,7 @@ $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 
 $(TARGET): $(SOURCES) $(HEADERS)
-	$(GXX) -o $(TARGET) $(SOURCES)
+	$(GXX) $(LIBRARIES) -o $(TARGET) $(SOURCES)
 
 clean:
 	rm -rf $(BUILD_DIR)

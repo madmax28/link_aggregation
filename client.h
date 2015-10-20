@@ -2,7 +2,7 @@
 #define _CLIENT_H_
 
 #include <vector>
-#include "common.hpp"
+#include "common.h"
 #include <netinet/ip.h>      // htons()
 
 enum Protocol {
@@ -13,15 +13,14 @@ enum Protocol {
 class Client {
 
     int m_socket;
-    struct sockaddr_in m_sockaddr;
-    int m_port;
 
     public:
 
     Client();
     ~Client();
 
-    Buffer RecvPkt();
+    Buffer RecvPkt() const;
+    int SendPkt( Buffer const &buf ) const;
 };
 
 #endif /* _CLIENT_H_ */
