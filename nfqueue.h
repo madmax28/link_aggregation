@@ -11,22 +11,32 @@
 
 class NfqHandler {
 
+    struct NfqCbArgs {
+        unsigned char *mp_packet;
+        int            m_packet_len;
+    };
+
     struct nfq_handle   *m_nfq_handle;
     char                 m_nfq_buffer[NFQUEUE_BUFSIZE];
     struct nfq_q_handle *m_nfq_q_handle;
     struct nfnl_handle  *m_nfq_nl_handle;
     int                  m_nfq_nl_fd;
-    int                 (*mp_treat_packet_fun)(unsigned char*, int const);
+    NfqCbArgs            m_nfq_cb_args;
+
+    static int NfqCallbackFun( struct nfq_q_handle *nfq,
+            struct nfgenmsg *pkt,
+            struct nfq_data *nfa,
+            void *data );
 
     public:
 
-    NfqHandler( int (*p_treat_packet_fun)(unsigned char*, int const) );
+    NfqHandler();
     ~NfqHandler() {
         nfq_close(m_nfq_handle);
         nfq_destroy_queue(m_nfq_q_handle);
     }
 
-    int HandlePacket();
+    int GetPacket( unsigned char **packet_buffer );
 };
 
 #endif /* _NFQUEUE_H_ */

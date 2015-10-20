@@ -3,11 +3,6 @@
 #include "link_aggregator.h"
 #include "nfqueue.h"
 
-int treat_function( unsigned char *pkt, int const len ) {
-    std::cout << "Treat fun called" << std::endl;
-    return len;
-}
-
 int main( int argc, const char *argv[] ) {
 
     /*
@@ -48,15 +43,16 @@ int main( int argc, const char *argv[] ) {
     }
     */
 
-    int (*p_treat_packet_fun)(unsigned char*, int const)
-        = &treat_function;
+    NfqHandler nfqh;
 
-    p_treat_packet_fun( NULL, 0 );
-
-    NfqHandler nfqh(&treat_function);
+    unsigned char *packet;
+    int ret;
 
     for(;;) {
-        nfqh.HandlePacket();
+        ret = nfqh.GetPacket( &packet );
+        if( ret > 0 ) {
+            std::cout << "Got packet of length " << ret << std::endl;
+        }
     }
 
     return 0;

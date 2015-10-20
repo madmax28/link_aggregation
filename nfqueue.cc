@@ -5,13 +5,12 @@
 
 #define NFQ_QUEUE_NUM 0
 
-int nfq_callback_fun( struct nfq_q_handle *nfq,
+int NfqHandler::NfqCallbackFun( struct nfq_q_handle *nfq,
         struct nfgenmsg *pkt,
         struct nfq_data *nfa,
         void *data ) {
 
-    int (*p_treat_packet_fun)(unsigned char*, int const)
-        = (int (*)(unsigned char*, int const)) data;
+    NfqCbArgs *args = (NfqCbArgs *) data;
 
     std::cout << "Callback called" << std::endl;
 
@@ -20,22 +19,18 @@ int nfq_callback_fun( struct nfq_q_handle *nfq,
     uint32_t id = ntohl(nf_header->packet_id);
 
     // Treat packet
-    unsigned char *payload;
-    int ret = nfq_get_payload( nfa, &payload );
+    int ret = nfq_get_payload( nfa, &(args->mp_packet) );
     if( ret == -1 ) {
         std::cerr << "ERROR: could not receive payload" << std::endl;
     }
-
-    // Call user-supplied treatment function
-    int new_pkt_len = (*p_treat_packet_fun) ( payload, ret );
+    args->m_packet_len = ret;
 
     // We drop the packet here
     return nfq_set_verdict( nfq, id, NF_DROP, 0, NULL);
 }
 
-NfqHandler::NfqHandler( int (*p_treat_packet_fun)(unsigned char*, int const) )
-        : m_nfq_handle(nfq_open())
-        , mp_treat_packet_fun(p_treat_packet_fun) {
+NfqHandler::NfqHandler()
+        : m_nfq_handle(nfq_open()) {
 
     if(!m_nfq_handle) {
         std::cerr << "ERROR: could not open nfqueue handler\n";
@@ -57,8 +52,8 @@ NfqHandler::NfqHandler( int (*p_treat_packet_fun)(unsigned char*, int const) )
     // Register nfq callback
     m_nfq_q_handle = nfq_create_queue( m_nfq_handle,
             NFQ_QUEUE_NUM,
-            &nfq_callback_fun,
-            (void *) mp_treat_packet_fun );
+            &NfqCallbackFun,
+            (void *) &m_nfq_cb_args );
     if(!m_nfq_q_handle) {
         std::cerr << "ERROR: could not create nfqueue queue" << std::endl;
         exit(1);
@@ -83,7 +78,7 @@ NfqHandler::NfqHandler( int (*p_treat_packet_fun)(unsigned char*, int const) )
     }
 }
 
-int NfqHandler::HandlePacket() {
+int NfqHandler::GetPacket( unsigned char **packet ) {
 
     int ret = recv( m_nfq_nl_fd, m_nfq_buffer, sizeof(m_nfq_buffer), 0 );
     if( ret > 0 ) {
@@ -92,5 +87,7 @@ int NfqHandler::HandlePacket() {
                 m_nfq_buffer,
                 ret );
     }
-    return ret;
+
+    *packet = m_nfq_cb_args.mp_packet;
+    return m_nfq_cb_args.m_packet_len;
 }
