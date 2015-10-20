@@ -5,8 +5,37 @@
 
 #define NFQ_QUEUE_NUM 0
 
-NfqHandler::NfqHandler( int (*p_cb_fun)(nfq_q_handle*, nfgenmsg*, nfq_data*, void*) )
-        : m_nfq_handle(nfq_open()) {
+int nfq_callback_fun( struct nfq_q_handle *nfq,
+        struct nfgenmsg *pkt,
+        struct nfq_data *nfa,
+        void *data ) {
+
+    int (*p_treat_packet_fun)(unsigned char*, int const)
+        = (int (*)(unsigned char*, int const)) data;
+
+    std::cout << "Callback called" << std::endl;
+
+    struct nfqnl_msg_packet_hdr *nf_header;
+    nf_header = nfq_get_msg_packet_hdr(nfa);
+    uint32_t id = ntohl(nf_header->packet_id);
+
+    // Treat packet
+    unsigned char *payload;
+    int ret = nfq_get_payload( nfa, &payload );
+    if( ret == -1 ) {
+        std::cerr << "ERROR: could not receive payload" << std::endl;
+    }
+
+    // Call user-supplied treatment function
+    int new_pkt_len = (*p_treat_packet_fun) ( payload, ret );
+
+    // We drop the packet here
+    return nfq_set_verdict( nfq, id, NF_DROP, 0, NULL);
+}
+
+NfqHandler::NfqHandler( int (*p_treat_packet_fun)(unsigned char*, int const) )
+        : m_nfq_handle(nfq_open())
+        , mp_treat_packet_fun(p_treat_packet_fun) {
 
     if(!m_nfq_handle) {
         std::cerr << "ERROR: could not open nfqueue handler\n";
@@ -28,8 +57,8 @@ NfqHandler::NfqHandler( int (*p_cb_fun)(nfq_q_handle*, nfgenmsg*, nfq_data*, voi
     // Register nfq callback
     m_nfq_q_handle = nfq_create_queue( m_nfq_handle,
             NFQ_QUEUE_NUM,
-            p_cb_fun,
-            NULL );
+            &nfq_callback_fun,
+            (void *) mp_treat_packet_fun );
     if(!m_nfq_q_handle) {
         std::cerr << "ERROR: could not create nfqueue queue" << std::endl;
         exit(1);
@@ -62,6 +91,6 @@ int NfqHandler::HandlePacket() {
         nfq_handle_packet( m_nfq_handle,
                 m_nfq_buffer,
                 ret );
-    }   
+    }
     return ret;
 }

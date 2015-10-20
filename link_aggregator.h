@@ -9,19 +9,8 @@
 
 class LinkAggregator {
 
-    /*
-     * Configuration parameters
-     */
-
-    /* Client related stuff */
-
-    // Port for communication with client app
-    Config m_config;
-    Client m_client;
-
-    /* Link aggregation related stuff */
-
-    // Aggregated links
+    Config              m_config;
+    Client              m_client;
     std::vector<Link *> m_links;
 
     public:
@@ -30,9 +19,9 @@ class LinkAggregator {
 
     Buffer RecvPktFromClient() const;
     int SendPktToClient( Buffer const &buf ) const;
+
     Buffer const RecvOnLinks() const;
     int SendOnLinks( Buffer const &buf ) const;
-
 };
 
 #endif /* _LAGG_H_ */
