@@ -1,5 +1,8 @@
 #include <iostream>
 #include <stdlib.h>
+#include <stdio.h>
+
+#include <fcntl.h>
 
 #include "nfqueue.h"
 
@@ -11,8 +14,6 @@ int NfqHandler::NfqCallbackFun( struct nfq_q_handle *nfq,
         void *data ) {
 
     NfqCbArgs *args = (NfqCbArgs *) data;
-
-    std::cout << "Callback called" << std::endl;
 
     struct nfqnl_msg_packet_hdr *nf_header;
     nf_header = nfq_get_msg_packet_hdr(nfa);
@@ -76,18 +77,29 @@ NfqHandler::NfqHandler()
     if(!m_nfq_nl_fd) {
         std::cerr << "ERROR: could not get nfnl fd" << std::endl;
     }
+
+    int fdflags = fcntl( m_nfq_nl_fd, F_GETFL );
+    if( fdflags < 0 ) {
+        perror("fcntl()");
+        exit(1);
+    }
+    if ( fcntl( m_nfq_nl_fd, F_SETFL, fdflags | O_NONBLOCK ) < 0 ) {
+        perror("fcntl()");
+        exit(1);
+    }
 }
 
 int NfqHandler::GetPacket( unsigned char **packet ) {
 
     int ret = recv( m_nfq_nl_fd, m_nfq_buffer, sizeof(m_nfq_buffer), 0 );
     if( ret > 0 ) {
-        std::cout << "Received byte: " << ret << std::endl;
         nfq_handle_packet( m_nfq_handle,
                 m_nfq_buffer,
                 ret );
+
+        *packet = m_nfq_cb_args.mp_packet;
+        return m_nfq_cb_args.m_packet_len;
     }
 
-    *packet = m_nfq_cb_args.mp_packet;
-    return m_nfq_cb_args.m_packet_len;
+    return 0;
 }

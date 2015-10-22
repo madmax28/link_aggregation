@@ -2,24 +2,23 @@
 #define _CLIENT_H_
 
 #include <vector>
-#include "common.h"
+
 #include <netinet/ip.h>      // htons()
 
-enum Protocol {
-    UDP = 0,
-    TCP
-};
+#include "common.h"
+#include "nfqueue.h"
 
 class Client {
 
     int m_socket;
+    NfqHandler m_nfq_handler;
 
     public:
 
     Client();
     ~Client();
 
-    Buffer RecvPkt() const;
+    Buffer RecvPkt();
     int SendPkt( Buffer const &buf ) const;
 };
 

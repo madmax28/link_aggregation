@@ -17,7 +17,7 @@ class LinkAggregator {
 
     LinkAggregator( const std::string config_filename = "default_config.cfg" );
 
-    Buffer RecvPktFromClient() const;
+    Buffer RecvPktFromClient();
     int SendPktToClient( Buffer const &buf ) const;
 
     Buffer const RecvOnLinks() const;

@@ -18,7 +18,6 @@
 struct __attribute__ ((__packed__)) AlaggHeader {
     struct ether_header m_eth_header;
     // TODO: SEQ no goes here
-    unsigned int m_payload_size;
 };
 
 /*

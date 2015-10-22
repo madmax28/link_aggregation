@@ -20,45 +20,9 @@ LinkAggregator::LinkAggregator( const std::string config_filename )
     }
 }
 
-Buffer LinkAggregator::RecvPktFromClient() const {
+Buffer LinkAggregator::RecvPktFromClient() {
 
-    Buffer buf = m_client.RecvPkt();
-
-    if ( buf.size() > 0 ) {
-
-        /*
-         * Iptables replaces the original destination address with 127.0.0.1.
-         * Therefore, we will reinject the original destination address
-         * into the ip header
-         */
-
-        unsigned char *p_dst_ip = buf.data()
-            + IP_HEADER_OFFSET
-            + IP_HEADER_DST_ADDR_OFFSET;
-
-        uint32_t dst_ip = m_config.ClientIp().Addr().s_addr;
-        memcpy( p_dst_ip, &dst_ip, IP_ADDR_LEN );
-
-        /*
-         * Original packets might be destined for a specific port.
-         * However, since the packets were redirected, and the os is likely not
-         * listening on this port, an ICMP packet might be generated, to signal an
-         * unreachable destination.
-         * Since this is a local packet, we will receive it as a 'client packet'.
-         * We don't want to forward theses packets, however, which is why ICMP
-         * packets will be dropped here.
-         */
-
-        struct iphdr *iph = (struct iphdr *) buf.data();
-
-        if( iph->protocol == IPPROTO_ICMP ) {
-            buf.clear();
-        }
-
-
-    }
-
-    return buf;
+    return m_client.RecvPkt();
 }
 
 int LinkAggregator::SendPktToClient( Buffer const &buf ) const {
@@ -77,26 +41,26 @@ int LinkAggregator::SendOnLinks( Buffer const &buf ) const {
 
     // Construct packet
     bzero( packet, packet_size );
-    packet->m_header.m_payload_size = buf.size();
     memcpy( packet->m_payload, buf.data(), buf.size() );
     packet->m_header.m_eth_header.ether_type = ETH_P_ALAGG;
 
     for( int i = 0; i < m_links.size(); i++ ) {
         // Prepare ethernet header
-        memcpy( packet->m_header.m_eth_header.ether_shost, m_links[i]->OwnAddr().Addr().data(),  MAC_ADDRLEN );
-        memcpy( packet->m_header.m_eth_header.ether_dhost, m_links[i]->PeerAddr().Addr().data(), MAC_ADDRLEN );
+        memcpy( packet->m_header.m_eth_header.ether_shost,
+                m_links[i]->OwnAddr().Addr().data(),
+                MAC_ADDRLEN );
+        memcpy( packet->m_header.m_eth_header.ether_dhost,
+                m_links[i]->PeerAddr().Addr().data(),
+                MAC_ADDRLEN );
 
         int byte_sent = send( m_links[i]->Socket(), packet, packet_size, 0 );
         if( byte_sent == -1 ) {
-//        if( send( m_links[i]->Socket(), packet, packet_size, 0 ) == -1 ) {
             perror("send()");
             exit(1);
-        } else {
-            std::cout << "Sent byte on link: " << byte_sent << std::endl;
-            return byte_sent;
         }
     }
 
+    free(packet);
     return 0;
 }
 
@@ -172,6 +136,5 @@ void print_packet( AlaggPacket *packet, const unsigned int size ) {
     print_mac( packet->m_header.m_eth_header.ether_dhost );
     printf("\n");
     printf( "Eth type     : 0x%x\n", ntohs(packet->m_header.m_eth_header.ether_type) );
-    printf( "Payload size : %d Byte\n", ntohl(packet->m_header.m_payload_size) );
     printf( "========================================================\n" );
 }

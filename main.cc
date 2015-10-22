@@ -5,7 +5,6 @@
 
 int main( int argc, const char *argv[] ) {
 
-    /*
     std::string config_file;
     if( argc == 3 ) {
         if( std::string(argv[1]) != "-c" ) {
@@ -27,7 +26,7 @@ int main( int argc, const char *argv[] ) {
         pktbuf.clear();
         pktbuf = aggregator.RecvPktFromClient();
         if( pktbuf.size() > 0 ) {
-            std::cout << "Client --> Agg --> Links" << std::endl;
+//            std::cout << "Client --> Agg --> Links" << std::endl;
             // Got packet, forward to links
             aggregator.SendOnLinks(pktbuf);
         }
@@ -36,22 +35,9 @@ int main( int argc, const char *argv[] ) {
         pktbuf.clear();
         pktbuf = aggregator.RecvOnLinks();
         if( pktbuf.size() > 0 ) {
-            std::cout << "Links --> Agg --> Client" << std::endl;
+//            std::cout << "Links --> Agg --> Client" << std::endl;
             // Got packet, forward to client
             aggregator.SendPktToClient(pktbuf);
-        }
-    }
-    */
-
-    NfqHandler nfqh;
-
-    unsigned char *packet;
-    int ret;
-
-    for(;;) {
-        ret = nfqh.GetPacket( &packet );
-        if( ret > 0 ) {
-            std::cout << "Got packet of length " << ret << std::endl;
         }
     }
 

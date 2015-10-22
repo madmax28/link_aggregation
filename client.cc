@@ -34,8 +34,8 @@ Client::Client() {
     struct sockaddr_ll sll;
 
     // We want IP packets, including headers
-//    m_socket = socket( AF_PACKET, SOCK_DGRAM, htons(ETH_P_IP) );
-    m_socket = socket( AF_PACKET, SOCK_RAW, htons(ETH_P_IP) );
+    m_socket = socket( AF_PACKET, SOCK_DGRAM, htons(ETH_P_IP) );
+//    m_socket = socket( AF_PACKET, SOCK_RAW, htons(ETH_P_IP) );
     if( m_socket == -1 ) {
         perror("socket()");
         exit(1);
@@ -92,34 +92,18 @@ Client::~Client() {
     close(m_socket);
 }
 
-Buffer Client::RecvPkt() const {
+Buffer Client::RecvPkt() {
     Buffer buf;
-    unsigned char raw_buf[BUF_SIZE];
-    ssize_t bytes_recvd;
 
-    bytes_recvd = recv( m_socket, (void *) raw_buf, BUF_SIZE, 0 );
-    if ( bytes_recvd > 0 )
-        buf.insert( buf.end(), raw_buf, raw_buf+bytes_recvd );
-    else
-        return buf;
+    unsigned char *raw_buf;
+    int pkt_len;
 
-    /*
-     * This is an attempt to query netfilter for the original destination
-     * address
-     */
+    pkt_len = m_nfq_handler.GetPacket(&raw_buf);
 
-//    socklen_t addr_len = sizeof(m_sockaddr);
-//    int ret = getsockopt( m_socket,
-//            IPPROTO_IP,
-//            SO_ORIGINAL_DST,
-//            (struct sockaddr *) &m_sockaddr,
-//            &addr_len );
-//    if( ret == -1 )
-//        perror("getsockopt()");
+    if( pkt_len > 0 ) {
+        buf.assign( raw_buf, raw_buf+pkt_len );
+    }
 
-//    std::cout << "Original destination: " << inet_ntoa(m_sockaddr.sin_addr) << std::endl;
-
-    std::cout << "Received bytes from client: " << buf.size() << std::endl;
     return buf;
 }
 
@@ -137,6 +121,6 @@ int Client::SendPkt( Buffer const & buf ) const {
     if ( byte_sent == -1 )
         perror("sent()");
 
-    std::cout << "Send byte to client: " << byte_sent << std::endl;
+//    std::cout << "Send byte to client: " << byte_sent << std::endl;
     return byte_sent;
 }
