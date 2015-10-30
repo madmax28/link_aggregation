@@ -4,7 +4,7 @@
 
 #include <fcntl.h>
 
-#include "nfqueue.h"
+#include "nfqueue.hh"
 
 #define NFQ_QUEUE_NUM 0
 

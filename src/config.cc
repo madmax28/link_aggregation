@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string>
 
-#include "config.h"
+#include "config.hh"
 
 Config::Config( std::string filename ) {
     ReadConfig(filename);

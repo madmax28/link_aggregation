@@ -1,5 +1,5 @@
-#ifndef _NFQUEUE_H_
-#define _NFQUEUE_H_
+#ifndef _NFQUEUE_HH_
+#define _NFQUEUE_HH_
 
 #include <sys/types.h>
 #include <netinet/in.h>
@@ -39,4 +39,4 @@ class NfqHandler {
     int GetPacket( unsigned char **packet_buffer );
 };
 
-#endif /* _NFQUEUE_H_ */
+#endif /* _NFQUEUE_HH_ */

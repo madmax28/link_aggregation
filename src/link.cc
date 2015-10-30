@@ -12,11 +12,12 @@
 
 #include <fcntl.h>           // fcntl()
 
-#include "link.h"
+#include "link.hh"
 
 Link::Link( std::string const ifname,
         std::string const mac_addr_str )
-        : m_peer_addr(mac_addr_str) {
+        : m_peer_addr(mac_addr_str)
+        , m_if_name(ifname) {
 
     /*
      * Link sockets are of type
@@ -47,14 +48,14 @@ Link::Link( std::string const ifname,
     // Get interface index
     memset( &ifr, 0, sizeof( ifr) );
     strncpy( ifr.ifr_name, ifname.c_str(), IFNAMSIZ - 1 );
-    if ( ioctl( m_socket, SIOCGIFINDEX, &ifr ) < 0 ){
+    if( ioctl( m_socket, SIOCGIFINDEX, &ifr ) < 0 ) {
         perror("ioctl()");
         exit(1);
     }
     sll.sll_ifindex = ifr.ifr_ifindex;
 
     // Get hardware address
-    if ( ioctl( m_socket, SIOCGIFHWADDR, &ifr ) < 0 ){
+    if( ioctl( m_socket, SIOCGIFHWADDR, &ifr ) < 0 ) {
         perror("ioctl()");
         exit(1);
     }
@@ -69,9 +70,8 @@ Link::Link( std::string const ifname,
             ifr.ifr_hwaddr.sa_data[5] );
     m_own_addr.SetAddr( std::string(tmp) );
 
-
     // Bind the raw socket to the interface specified
-    if ( bind( m_socket, (struct sockaddr *)&sll, sizeof(sll) ) < 0 ){
+    if( bind( m_socket, (struct sockaddr *)&sll, sizeof(sll) ) < 0 ) {
         perror("bind()");
         exit(1);
     }
@@ -82,7 +82,7 @@ Link::Link( std::string const ifname,
         perror("fcntl()");
         exit(1);
     }
-    if ( fcntl( m_socket, F_SETFL, fdflags | O_NONBLOCK ) < 0 ) {
+    if( fcntl( m_socket, F_SETFL, fdflags | O_NONBLOCK ) < 0 ) {
         perror("fcntl()");
         exit(1);
     }

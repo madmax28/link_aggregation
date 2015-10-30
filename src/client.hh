@@ -1,12 +1,12 @@
-#ifndef _CLIENT_H_
-#define _CLIENT_H_
+#ifndef _CLIENT_HH_
+#define _CLIENT_HH_
 
 #include <vector>
 
 #include <netinet/ip.h>      // htons()
 
-#include "common.h"
-#include "nfqueue.h"
+#include "common.hh"
+#include "nfqueue.hh"
 
 class Client {
 
@@ -22,4 +22,4 @@ class Client {
     int SendPkt( Buffer const &buf ) const;
 };
 
-#endif /* _CLIENT_H_ */
+#endif /* _CLIENT_HH_ */

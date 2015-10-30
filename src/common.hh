@@ -1,5 +1,5 @@
-#ifndef _COMMON_H_
-#define _COMMON_H_
+#ifndef _COMMON_HH_
+#define _COMMON_HH_
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -67,11 +67,11 @@ class MacAddress {
                 &m_addr[3],
                 &m_addr[4],
                 &m_addr[5] );
-        std::cout << m_str << std::endl;
+//        std::cout << m_str << std::endl;
     }
 
     std::string const Str() const { return m_str; }
     std::vector<char> const Addr() const { return m_addr; }
 };
 
-#endif /* _COMMON_H_ */
+#endif /* _COMMON_HH_ */

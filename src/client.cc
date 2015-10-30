@@ -16,8 +16,8 @@
 
 #include <linux/netfilter_ipv4.h>
 
-#include "client.h"
-#include "common.h"
+#include "client.hh"
+#include "common.hh"
 
 Client::Client() {
     /*

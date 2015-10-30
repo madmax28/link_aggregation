@@ -1,10 +1,10 @@
-#ifndef _CONFIG_H_
-#define _CONFIG_H_
+#ifndef _CONFIG_HH_
+#define _CONFIG_HH_
 
 #include <string>
 #include <vector>
 
-#include "common.h"
+#include "common.hh"
 
 class Config {
 
@@ -26,4 +26,4 @@ class Config {
         }
 };
 
-#endif /* _CONFIG_H_ */
+#endif /* _CONFIG_HH_ */

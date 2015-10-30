@@ -1,7 +1,7 @@
 #include <iostream>
 
-#include "link_aggregator.h"
-#include "nfqueue.h"
+#include "link_aggregator.hh"
+#include "nfqueue.hh"
 
 int main( int argc, const char *argv[] ) {
 

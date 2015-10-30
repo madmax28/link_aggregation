@@ -1,8 +1,8 @@
 BUILD_DIR=build
 APP_NAME=aggregator
 LIBRARIES=-lnetfilter_queue -lnfnetlink
-SOURCES=$(wildcard *.cc)
-HEADERS=$(wildcard *.h)
+SOURCES=$(wildcard src/*.cc)
+HEADERS=$(wildcard src/*.hh)
 
 TARGET=$(addprefix $(BUILD_DIR)/, $(APP_NAME))
 
