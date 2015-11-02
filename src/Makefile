@@ -1,12 +1,14 @@
-BUILD_DIR=build
+BUILD_DIR=../build
 APP_NAME=aggregator
-LIBRARIES=-lnetfilter_queue -lnfnetlink
-SOURCES=$(wildcard src/*.cc)
-HEADERS=$(wildcard src/*.hh)
+LIBRARIES=-lnetfilter_queue -lnfnetlink -lpthread
+SOURCES=$(wildcard *.cc)
+HEADERS=$(wildcard *.hh)
 
 TARGET=$(addprefix $(BUILD_DIR)/, $(APP_NAME))
 
 GXX=g++
+#GXX=clang
+GXXFLAGS=-std=c++11
 
 .PHONY: default all clean
 
@@ -18,7 +20,7 @@ $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 
 $(TARGET): $(SOURCES) $(HEADERS)
-	$(GXX) $(LIBRARIES) -o $(TARGET) $(SOURCES)
+	$(GXX) $(GXXFLAGS) $(LIBRARIES) -o $(TARGET) $(SOURCES)
 
 clean:
 	rm -rf $(BUILD_DIR)

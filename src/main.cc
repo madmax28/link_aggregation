@@ -2,6 +2,8 @@
 
 #include "link_aggregator.hh"
 #include "nfqueue.hh"
+#include "safe_queue.hh"
+#include "piped_thread.hh"
 
 int main( int argc, const char *argv[] ) {
 
