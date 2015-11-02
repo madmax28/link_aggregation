@@ -18,12 +18,24 @@
 
 class PipedThread {
 
+    public:
+
+    // Execution mode
+    enum piped_thread_mode {
+        exec_repeat = -1,
+        exec_once   = 1
+    };
+
+    private:
+
+    // Number of thread executions, -1 = inf
+    piped_thread_mode m_mode;
+    std::thread       m_thread;
+
     struct Pipe {
         int m_rx;
         int m_tx;
     } m_pipe;
-
-    std::thread m_thread;
 
     /*
      * Target function wrappers.
@@ -31,19 +43,23 @@ class PipedThread {
      */
 
     template<typename F>
-    void target(F fun) {
+    static void target(F fun, PipedThread *t) {
 
-        // Call fun, the notify pipe
-        fun();
-        NotifyPipe();
+        do {
+            // Call fun, the notify pipe
+            fun();
+            t->NotifyPipe();
+        } while(t->m_mode == exec_repeat);
     }
 
     template<typename F, typename A>
-    void target(F fun, A args) {
+    static void target(F fun, A args, PipedThread *t) {
 
-        // Call fun, the notify pipe
-        fun(args);
-        NotifyPipe();
+        do {
+            // Call fun, the notify pipe
+            fun(args);
+            t->NotifyPipe();
+        } while(t->m_mode == exec_repeat);
     }
 
     /*
@@ -73,20 +89,25 @@ class PipedThread {
      */
 
     template<typename F>
-    PipedThread(F fun)
-            : m_thread(target<F>, fun) {
+    PipedThread(F fun,
+            piped_thread_mode mode = exec_once)
+            : m_mode(mode)
+            ,  m_thread(target<F>, fun, this) {
         OpenPipe();
     }
 
     template<typename F, typename A>
-    PipedThread(F fun, A args)
-            : m_thread(target<F, A>, fun, args) {
+    PipedThread(F fun,
+            A args,
+            piped_thread_mode mode = exec_once)
+            : m_mode(mode)
+            , m_thread(target<F, A>, fun, args, this) {
         OpenPipe();
     }
 
+    // Wait for thread to finish
     void Join() {
         m_thread.join();
-        // TODO
     }
 };
 
