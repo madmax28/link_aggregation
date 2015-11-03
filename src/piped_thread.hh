@@ -1,7 +1,10 @@
 #ifndef _PIPED_THREAD_HH_
 #define _PIPED_THREAD_HH_
 
+// Pipe
 #include <unistd.h>
+#include <fcntl.h>
+
 #include <thread>
 
 #include "common.hh"
@@ -19,6 +22,10 @@
 class PipedThread {
 
     public:
+
+    enum piped_thread_except {
+        except_pipefull = 0
+    };
 
     // Execution mode
     enum piped_thread_mode {
@@ -75,11 +82,20 @@ class PipedThread {
 
         m_pipe.m_rx = pfd[0];
         m_pipe.m_tx = pfd[1];
+
+        // Tx end should be non-blocking
+        int fdflags = fcntl(m_pipe.m_tx, F_GETFL);
+        assert_perror(errno);
+        fcntl(m_pipe.m_tx, F_SETFL, fdflags | O_NONBLOCK);
+        assert_perror(errno);
     }
 
     void NotifyPipe() const {
         write(m_pipe.m_tx, MSG_DONE, MSG_LEN);
-        assert_perror(errno);
+        if((errno == EAGAIN) || (errno == EWOULDBLOCK))
+            throw except_pipefull;
+        else
+            assert_perror(errno);
     }
 
     public:

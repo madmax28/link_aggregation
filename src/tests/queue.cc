@@ -23,8 +23,9 @@ static void pop(SafeQueue<int> *q) {
         q->PopFront();
         m << "Popped. n=" << (n == 0 ? 0 : --n) << std::endl;
         std::cout << m.str();
+    } catch(...) {
+        std::cout << "Queue empty\n";
     }
-    catch(...) {}
 }
 
 int main() {
