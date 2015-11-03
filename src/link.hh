@@ -3,6 +3,7 @@
 
 #include <string>
 #include <unistd.h>
+#include <limits.h>
 
 #include <net/ethernet.h>
 
@@ -10,6 +11,7 @@
 
 // Definition of our ethernet type/protocol
 #define ETH_P_ALAGG 0x4242
+#define ALAGG_MAX_SEQ (USHRT_MAX)
 
 /*
  * ALAGG Header definition
@@ -30,9 +32,7 @@ struct __attribute__ ((__packed__)) AlaggPacket {
 };
 
 /*
- * Class to manage the links to be aggregated.
- *
- * Utilizes a single socket for each link.
+ * Class to manage a link.
  * Link communication is managed within the data link layer.
  * Thus, sockets are bound to interfaces.
  */
