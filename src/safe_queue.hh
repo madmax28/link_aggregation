@@ -4,13 +4,24 @@
 #include <queue>
 #include <mutex>
 
+#include <iostream>
+
 template<typename T>
 class SafeQueue {
+
+    public:
+
+    enum safe_queue_except {
+        except_isempty = 0
+    };
 
     std::queue<T> m_queue;
     std::mutex m_mutex;
 
-    public:
+    SafeQueue() {}
+
+    // Copy constructor
+    SafeQueue(const SafeQueue &q) {}
 
     void Push(const T& val) {
         std::lock_guard<std::mutex> lock(m_mutex);
@@ -19,11 +30,24 @@ class SafeQueue {
 
     void Pop() {
         std::lock_guard<std::mutex> lock(m_mutex);
+        if(m_queue.empty())
+            throw except_isempty;
         m_queue.pop();
+    }
+
+    T& PopFront() {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        if(m_queue.empty())
+            throw except_isempty;
+        T &val = m_queue.front();
+        m_queue.pop();
+        return val;
     }
 
     T& Front() {
         std::lock_guard<std::mutex> lock(m_mutex);
+        if(m_queue.empty())
+            throw except_isempty;
         return m_queue.front();
     }
 
@@ -32,7 +56,7 @@ class SafeQueue {
         return m_queue.front();
     }
 
-    void Empty() const {
+    bool Empty() const {
         std::lock_guard<std::mutex> lock(m_mutex);
         return m_queue.empty();
     }

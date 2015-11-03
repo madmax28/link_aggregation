@@ -109,6 +109,8 @@ class PipedThread {
     void Join() {
         m_thread.join();
     }
+
+    int const PipeTxFd() const { return m_pipe.m_tx; }
 };
 
 #endif /* _PIPED_THREAD_HH_ */
