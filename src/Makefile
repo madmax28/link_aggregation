@@ -15,9 +15,9 @@ GXXFLAGS=-std=c++11
 
 .PHONY: default all clean tests
 
-default: all
+default: $(TARGET)
 
-all: $(BUILD_DIR) $(TARGET)
+all: $(BUILD_DIR) $(TARGET) tests
 
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)

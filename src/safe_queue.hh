@@ -4,8 +4,6 @@
 #include <queue>
 #include <mutex>
 
-#include <iostream>
-
 template<typename T>
 class SafeQueue {
 
@@ -19,9 +17,6 @@ class SafeQueue {
     std::mutex m_mutex;
 
     SafeQueue() {}
-
-    // Copy constructor
-    SafeQueue(const SafeQueue &q) {}
 
     void Push(const T& val) {
         std::lock_guard<std::mutex> lock(m_mutex);

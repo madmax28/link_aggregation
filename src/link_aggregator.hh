@@ -1,23 +1,28 @@
 #ifndef _LAGG_HH_
 #define _LAGG_HH_
 
-#include <vector>
 #include "config.hh"
 #include "link.hh"
 #include "client.hh"
 #include "common.hh"
+#include "safe_queue.hh"
+#include "piped_thread.hh"
+#include "link_receptor.hh"
+
+#include <vector>
 
 class LinkAggregator {
 
-    Config              m_config;
-    Client              m_client;
-    std::vector<Link *> m_links;
+    Config                   m_config;
+    Client                   m_client;
 
-    unsigned short      m_tx_seq;
-    unsigned short      m_rx_seq;
+    // Stores reordered packets ready to be delivered to the client
+//    SafeQueue<AlaggPacket &> m_pkt_q;
+//    PipedThread              m_links_rx_t;
+    std::vector<Link *>      m_links;
 
-    // To store out-of-order packets
-    std::vector<AlaggPacket> m_pkt_buf;
+    unsigned short           m_tx_seq;
+    unsigned short           m_rx_seq;
 
     private:
 

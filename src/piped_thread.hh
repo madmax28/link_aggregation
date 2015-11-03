@@ -88,11 +88,15 @@ class PipedThread {
      * Constructors
      */
 
+    PipedThread() {
+        OpenPipe();
+    }
+
     template<typename F>
     PipedThread(F fun,
             piped_thread_mode mode = exec_once)
             : m_mode(mode)
-            ,  m_thread(target<F>, fun, this) {
+            , m_thread(target<F>, fun, this) {
         OpenPipe();
     }
 
@@ -103,6 +107,23 @@ class PipedThread {
             : m_mode(mode)
             , m_thread(target<F, A>, fun, args, this) {
         OpenPipe();
+    }
+
+    /*
+     * Set thread function at a later point, in case empty constructor was
+     * called
+     */
+
+    template<typename F>
+    void SetThread(F fun, piped_thread_mode mode = exec_once) {
+        m_mode = mode;
+        m_thread = std::thread(target<F>, fun, this);
+    }
+
+    template<typename F, typename A>
+    void SetThread(F fun, A args, piped_thread_mode mode = exec_once) {
+        m_mode = mode;
+        m_thread = std::thread(target<F, A>, fun, args, this);
     }
 
     // Wait for thread to finish
