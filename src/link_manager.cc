@@ -1,14 +1,12 @@
 #include "link_manager.hh"
 
-void LinkManager::recv_on_links(LinkManager *t) {
-
-    std::cout << "LinkManager::recv()\n";
+bool LinkManager::recv_on_links(LinkManager *t) {
 
     // Used for round-robin
     static unsigned int link_index = 0;
 
     Buffer buf;
-    char raw_buf[BUF_SIZE];
+    unsigned char raw_buf[BUF_SIZE];
     AlaggPacket *packet;
     int byte_rcvd;
     int idx;
@@ -20,7 +18,7 @@ void LinkManager::recv_on_links(LinkManager *t) {
          * is available (EAGAIN, EWOULDBLOCK)
          */
 
-        std::cout << "link " << link_index << std::endl;
+//        std::cout << "link " << link_index << std::endl;
 
         do {
             byte_rcvd = recv( t->m_links[link_index]->Socket(),
@@ -36,7 +34,7 @@ void LinkManager::recv_on_links(LinkManager *t) {
             if( byte_rcvd == 0 ) {
                 // Shouldn't happen
                 std::cerr << "ERROR: Received 0 bytes" << std::endl;
-                goto done;
+                break;
 
             } else {
 
@@ -72,19 +70,20 @@ void LinkManager::recv_on_links(LinkManager *t) {
                 buf.insert( buf.end(),
                         raw_buf+sizeof(AlaggHeader),
                         raw_buf+byte_rcvd );
-                goto done;
 
                 // Debug
-                //            print_packet( (AlaggPacket *) raw_buf, buf.size() );
+//                print_buffer(buf.data(), buf.size());
+
+                t->Push(buf);
+                link_index = (link_index+1) % t->m_links.size();
+                return true;
             }
         } while(true);
 
-                link_index = (link_index+1) % t->m_links.size();
+        link_index = (link_index+1) % t->m_links.size();
     }
 
-done:
-    link_index = (link_index+1) % t->m_links.size();
-    t->Push(buf);
+    return false;
 }
 
 bool LinkManager::IsInSequence( unsigned short const seq ) const {
@@ -133,13 +132,21 @@ int LinkManager::Send(Buffer const & buf) {
                 m_links[i]->PeerAddr().Addr().data(),
                 MAC_ADDRLEN );
 
-        int byte_sent = send( m_links[i]->Socket(), packet, packet_size, 0 );
-        if( byte_sent == -1 ) {
-            perror("send()");
-            exit(1);
-        }
+        send( m_links[i]->Socket(), packet, packet_size, 0 );
+        errno = 0; assert_perror(errno);
     }
 
     free(packet);
     return 0;
 }
+
+Buffer const LinkManager::Recv() {
+    if(Empty())
+        return Buffer();
+    else {
+        Buffer buf = Front();
+        Pop();
+        return buf;
+    }
+}
+

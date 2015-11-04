@@ -9,20 +9,20 @@ TEST_SOURCES=$(wildcard $(TESTS_DIR)/*.cc)
 TARGET=$(addprefix $(BUILD_DIR)/, $(APP_NAME))
 TEST_TARGETS=$(patsubst $(TESTS_DIR)/%.cc, $(BUILD_DIR)/%, $(TEST_SOURCES))
 
-#GXX=g++
-GXX=clang++
+GXX=g++
+#GXX=clang++
 GXXFLAGS=-std=c++11
 
 .PHONY: default all clean tests
 
 default: $(TARGET)
 
-all: $(BUILD_DIR) $(TARGET) tests
+all: $(TARGET) tests
 
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 
-$(TARGET): $(SOURCES) $(HEADERS)
+$(TARGET): $(BUILD_DIR) $(SOURCES) $(HEADERS)
 	$(GXX) $(GXXFLAGS) $(LIBRARIES) -o $(TARGET) $(SOURCES)
 
 tests: $(BUILD_DIR) $(TEST_TARGETS)

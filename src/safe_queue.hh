@@ -30,15 +30,6 @@ class SafeQueue {
         m_queue.pop();
     }
 
-    T& PopFront() {
-        std::lock_guard<std::mutex> lock(m_mutex);
-        if(m_queue.empty())
-            throw except_isempty;
-        T &val = m_queue.front();
-        m_queue.pop();
-        return val;
-    }
-
     T& Front() {
         std::lock_guard<std::mutex> lock(m_mutex);
         if(m_queue.empty())
@@ -46,17 +37,12 @@ class SafeQueue {
         return m_queue.front();
     }
 
-    const T& Front() const {
-        std::lock_guard<std::mutex> lock(m_mutex);
-        return m_queue.front();
-    }
-
-    bool Empty() const {
+    bool Empty() {
         std::lock_guard<std::mutex> lock(m_mutex);
         return m_queue.empty();
     }
 
-    size_t Size() const {
+    size_t Size() {
         std::lock_guard<std::mutex> lock(m_mutex);
         return m_queue.size();
     }

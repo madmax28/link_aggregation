@@ -8,6 +8,7 @@
 #include <iostream>
 
 #include <net/if.h>
+#include <linux/if_ether.h>
 
 #include <arpa/inet.h>
 #include <vector>
@@ -76,5 +77,29 @@ class MacAddress {
     std::string const Str() const { return m_str; }
     std::vector<char> const Addr() const { return m_addr; }
 };
+
+inline void print_mac(const unsigned char *mac) {
+    int i;
+
+    for( i = 0; i < ETH_ALEN; i++ ) {
+        printf( "%02x%s", mac[i], (i == ETH_ALEN-1 ? "" : ":") );
+    }
+}
+
+inline void print_bytes(unsigned char const * buf, const unsigned int size) {
+
+    int it;
+
+    printf( "Buffer =================================================\n" );
+    printf( "Content:\n" );
+    for(it = 0; it < size; it++) {
+        unsigned char c = buf[it];
+        printf( "%02X ", c );
+        if( !((it + 1) %  4 ) ) printf("   ");
+        if( !((it + 1) % 16 ) ) printf("\n");
+    }
+    printf("\n");
+    printf( "========================================================\n" );
+}
 
 #endif /* _COMMON_HH_ */

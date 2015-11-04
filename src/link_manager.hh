@@ -20,7 +20,7 @@ class LinkManager
     unsigned short      m_tx_seq;
     unsigned short      m_rx_seq;
 
-    static void recv_on_links(LinkManager *t);
+    static bool recv_on_links(LinkManager *t);
     bool IsInSequence( unsigned short const seq ) const;
 
     public:
@@ -31,7 +31,7 @@ class LinkManager
 
     unsigned short NextTxSeq() { return (m_tx_seq++ % USHRT_MAX); }
     int Send(Buffer const & buf);
-    Buffer const Recv() { return PopFront(); }
+    Buffer const Recv();
 
     std::vector<Link *> const Links() const { return m_links; }
 };

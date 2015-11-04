@@ -7,8 +7,6 @@
 
 #include "link_aggregator.hh"
 
-void print_packet( AlaggPacket *packet, const unsigned int size );
-
 LinkAggregator::LinkAggregator( const std::string config_filename )
         : m_config(config_filename)
         , m_link_manager(m_config.PeerAddresses(), m_config.IfNames()) {
@@ -53,36 +51,4 @@ int LinkAggregator::SendOnLinks( Buffer const &buf ) {
 Buffer const LinkAggregator::RecvOnLinks() {
 
     return m_link_manager.Recv();
-}
-
-void print_mac( const unsigned char *mac )
-{
-    int i;
-
-    for( i = 0; i < ETH_ALEN; i++ ) {
-        printf( "%02x%s", mac[i], (i == ETH_ALEN-1 ? "" : ":") );
-    }
-}
-
-void print_packet( AlaggPacket *packet, const unsigned int size ) {
-
-    int it;
-
-    printf( "Packet =================================================\n" );
-    printf( "Content:\n" );
-    for( it=0; it<size; it++ ) {
-        unsigned char c = ((unsigned char*) packet)[it];
-        printf( "%02X ", c );
-        if( !((it + 1) %  4 ) ) printf("   ");
-        if( !((it + 1) % 16 ) ) printf("\n");
-    }
-    printf("\n");
-    printf( "From         : " );
-    print_mac( packet->m_header.m_eth_header.ether_shost );
-    printf("\n");
-    printf( "To           : " );
-    print_mac( packet->m_header.m_eth_header.ether_dhost );
-    printf("\n");
-    printf( "Eth type     : 0x%x\n", ntohs(packet->m_header.m_eth_header.ether_type) );
-    printf( "========================================================\n" );
 }

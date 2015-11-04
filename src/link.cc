@@ -30,10 +30,7 @@ Link::Link( std::string const ifname,
      *   - ethernet type
      */
     m_socket = socket( AF_PACKET, SOCK_RAW, htons(ETH_P_ALAGG) );
-    if( m_socket == -1 ) {
-        perror("socket()");
-        exit(1);
-    }
+    assert_perror(errno);
 
     /*
      * Bind the socket to the provided interface
@@ -48,17 +45,14 @@ Link::Link( std::string const ifname,
     // Get interface index
     memset( &ifr, 0, sizeof( ifr) );
     strncpy( ifr.ifr_name, ifname.c_str(), IFNAMSIZ - 1 );
-    if( ioctl( m_socket, SIOCGIFINDEX, &ifr ) < 0 ) {
-        perror("ioctl()");
-        exit(1);
-    }
+    std::cout << ifname.c_str() << std::endl;
+    ioctl( m_socket, SIOCGIFINDEX, &ifr );
+    assert_perror(errno);
     sll.sll_ifindex = ifr.ifr_ifindex;
 
     // Get hardware address
-    if( ioctl( m_socket, SIOCGIFHWADDR, &ifr ) < 0 ) {
-        perror("ioctl()");
-        exit(1);
-    }
+    ioctl( m_socket, SIOCGIFHWADDR, &ifr );
+    assert_perror(errno);
     char tmp[MAC_ADDR_STRLEN+1];
     snprintf( (char *) tmp, MAC_ADDR_STRLEN+1,
             "%02hhx:%02hhx:%02hhx:%02hhx:%02hhx:%02hhx",
@@ -71,19 +65,12 @@ Link::Link( std::string const ifname,
     m_own_addr.SetAddr( std::string(tmp) );
 
     // Bind the raw socket to the interface specified
-    if( bind( m_socket, (struct sockaddr *)&sll, sizeof(sll) ) < 0 ) {
-        perror("bind()");
-        exit(1);
-    }
+    bind( m_socket, (struct sockaddr *)&sll, sizeof(sll) );
+    assert_perror(errno);
 
     // Make socket non-blocking
     int fdflags = fcntl( m_socket, F_GETFL );
-    if( fdflags < 0 ) {
-        perror("fcntl()");
-        exit(1);
-    }
-    if( fcntl( m_socket, F_SETFL, fdflags | O_NONBLOCK ) < 0 ) {
-        perror("fcntl()");
-        exit(1);
-    }
+    assert_perror(errno);
+    fcntl( m_socket, F_SETFL, fdflags | O_NONBLOCK );
+    assert_perror(errno);
 }

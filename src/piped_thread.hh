@@ -53,9 +53,9 @@ class PipedThread {
     static void target(F fun, PipedThread *t) {
 
         do {
-            // Call fun, the notify pipe
-            fun();
-            t->NotifyPipe();
+            // Call fun, then notify pipe
+            if(fun())
+                t->NotifyPipe();
         } while(t->m_mode == exec_repeat);
     }
 
@@ -64,8 +64,8 @@ class PipedThread {
 
         do {
             // Call fun, the notify pipe
-            fun(args);
-            t->NotifyPipe();
+            if(fun(args))
+                t->NotifyPipe();
         } while(t->m_mode == exec_repeat);
     }
 

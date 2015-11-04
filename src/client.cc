@@ -36,39 +36,27 @@ Client::Client() {
     // We want IP packets, including headers
     m_socket = socket( AF_PACKET, SOCK_DGRAM, htons(ETH_P_IP) );
 //    m_socket = socket( AF_PACKET, SOCK_RAW, htons(ETH_P_IP) );
-    if( m_socket == -1 ) {
-        perror("socket()");
-        exit(1);
-    }
+    assert_perror(errno);
 
     // Get interface index
     memset( &ifr, 0, sizeof( ifr) );
     strncpy( ifr.ifr_name, IFNAME_LOOPBACK, IFNAMSIZ - 1 );
-    if ( ioctl( m_socket, SIOCGIFINDEX, &ifr ) < 0 ){
-        perror("ioctl()");
-        exit(1);
-    }
+    ioctl( m_socket, SIOCGIFINDEX, &ifr );
+    assert_perror(errno);
     memset( &sll, 0, sizeof( sll) );
     sll.sll_family = AF_PACKET;
     sll.sll_ifindex = ifr.ifr_ifindex;
     sll.sll_protocol = htons(ETH_P_IP);
 
     // Bind the raw socket to the interface specified
-    if ( bind( m_socket, (struct sockaddr *)&sll, sizeof(sll) ) < 0 ){
-        perror("bind()");
-        exit(1);
-    }
+    bind( m_socket, (struct sockaddr *)&sll, sizeof(sll) );
+    assert_perror(errno);
 
     // Make socket non-blocking
     int fdflags = fcntl( m_socket, F_GETFL );
-    if( fdflags < 0 ) {
-        perror("fcntl()");
-        exit(1);
-    }
-    if ( fcntl( m_socket, F_SETFL, fdflags | O_NONBLOCK ) < 0 ) {
-        perror("fcntl()");
-        exit(1);
-    }
+    assert_perror(errno);
+    fcntl( m_socket, F_SETFL, fdflags | O_NONBLOCK );
+    assert_perror(errno);
 
 //    m_socket = socket( AF_INET, SOCK_DGRAM, 0 );
 //    if( m_socket == -1 ) {
