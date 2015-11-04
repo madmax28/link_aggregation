@@ -15,12 +15,12 @@ LinkAggregator::LinkAggregator( const std::string config_filename )
     PrintConfig();
 }
 
-Buffer LinkAggregator::RecvPktFromClient() {
+Buffer * LinkAggregator::RecvPktFromClient() {
 
     return m_client.RecvPkt();
 }
 
-int LinkAggregator::SendPktToClient( Buffer const &buf ) {
+int LinkAggregator::SendPktToClient( Buffer const * buf ) {
 
     return m_client.SendPkt(buf);
 }
@@ -43,12 +43,12 @@ void LinkAggregator::PrintConfig() const {
  * Send the provided msg on all links
  */
 
-int LinkAggregator::SendOnLinks( Buffer const &buf ) {
+int LinkAggregator::SendOnLinks( Buffer const * buf ) {
 
     return m_link_manager.Send(buf);
 }
 
-Buffer const LinkAggregator::RecvOnLinks() {
+Buffer * LinkAggregator::RecvOnLinks() {
 
     return m_link_manager.Recv();
 }

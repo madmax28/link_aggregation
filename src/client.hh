@@ -18,8 +18,8 @@ class Client {
     Client();
     ~Client();
 
-    Buffer RecvPkt();
-    int SendPkt( Buffer const &buf ) const;
+    Buffer * RecvPkt();
+    int SendPkt( Buffer const * buf ) const;
 };
 
 #endif /* _CLIENT_HH_ */

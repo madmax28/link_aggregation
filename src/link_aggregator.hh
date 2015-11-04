@@ -25,11 +25,11 @@ class LinkAggregator {
 
     LinkAggregator( const std::string config_filename = "default_config.cfg" );
 
-    Buffer RecvPktFromClient();
-    int SendPktToClient( Buffer const &buf );
+    Buffer * RecvPktFromClient();
+    int SendPktToClient( Buffer const * buf );
 
-    Buffer const RecvOnLinks();
-    int SendOnLinks( Buffer const &buf );
+    Buffer * RecvOnLinks();
+    int SendOnLinks( Buffer const * buf );
 };
 
 #endif /* _LAGG_HH_ */

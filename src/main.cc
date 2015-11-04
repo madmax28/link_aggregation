@@ -17,29 +17,26 @@ int main( int argc, const char *argv[] ) {
     }
 
     LinkAggregator aggregator(config_file);
-    Buffer pktbuf;
-
-    std::string msg = "Hello World!\n";
-    Buffer buf( msg.begin(), msg.end() );
+    Buffer* buf;
 
     for(;;) {
 
         // Try to receive from client
-        pktbuf.clear();
-        pktbuf = aggregator.RecvPktFromClient();
-        if( pktbuf.size() > 0 ) {
+        buf = aggregator.RecvPktFromClient();
+        if(buf) {
 //            std::cout << "Client --> Agg --> Links" << std::endl;
             // Got packet, forward to links
-            aggregator.SendOnLinks(pktbuf);
+            aggregator.SendOnLinks(buf);
+            delete buf;
         }
 
         // Try to receive from links
-        pktbuf.clear();
-        pktbuf = aggregator.RecvOnLinks();
-        if( pktbuf.size() > 0 ) {
+        buf = aggregator.RecvOnLinks();
+        if(buf) {
 //            std::cout << "Links --> Agg --> Client" << std::endl;
             // Got packet, forward to client
-            aggregator.SendPktToClient(pktbuf);
+            aggregator.SendPktToClient(buf);
+            delete buf;
         }
     }
 

@@ -11,7 +11,7 @@
 #include <string.h>
 
 class LinkManager
-        : public SafeQueue<Buffer>
+        : public SafeQueue<Buffer *>
         , public PipedThread {
 
     // Stores reordered packets ready to be delivered to the client
@@ -30,8 +30,8 @@ class LinkManager
     ~LinkManager();
 
     unsigned short NextTxSeq() { return (m_tx_seq++ % USHRT_MAX); }
-    int Send(Buffer const & buf);
-    Buffer const Recv();
+    int Send(Buffer const * buf);
+    Buffer * Recv();
 
     std::vector<Link *> const Links() const { return m_links; }
 };

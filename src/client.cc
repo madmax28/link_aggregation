@@ -80,16 +80,17 @@ Client::~Client() {
     close(m_socket);
 }
 
-Buffer Client::RecvPkt() {
-    Buffer buf;
+Buffer * Client::RecvPkt() {
 
+    Buffer *buf = nullptr;
     unsigned char *raw_buf;
     int pkt_len;
 
     pkt_len = m_nfq_handler.GetPacket(&raw_buf);
 
     if( pkt_len > 0 ) {
-        buf.assign( raw_buf, raw_buf+pkt_len );
+        buf = new Buffer();
+        buf->assign( raw_buf, raw_buf+pkt_len );
     }
 
     return buf;
@@ -101,11 +102,11 @@ Buffer Client::RecvPkt() {
  * without any changes
  */
 
-int Client::SendPkt( Buffer const & buf ) const {
+int Client::SendPkt( Buffer const * buf ) const {
 
     int byte_sent;
 
-    byte_sent = send( m_socket, buf.data(), buf.size(), 0 );
+    byte_sent = send( m_socket, buf->data(), buf->size(), 0 );
     if ( byte_sent == -1 )
         perror("sent()");
 

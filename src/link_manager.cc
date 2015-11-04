@@ -5,7 +5,6 @@ bool LinkManager::recv_on_links(LinkManager *t) {
     // Used for round-robin
     static unsigned int link_index = 0;
 
-    Buffer buf;
     unsigned char raw_buf[BUF_SIZE];
     AlaggPacket *packet;
     int byte_rcvd;
@@ -49,14 +48,14 @@ bool LinkManager::recv_on_links(LinkManager *t) {
                  * Else, accept it and update rx seq.
                  */
 
-                std::cout << "Received packet " << packet->m_header.m_seq;
+//                std::cout << "Received packet " << packet->m_header.m_seq;
 
                 if( !t->IsInSequence(packet->m_header.m_seq) ) {
-                    std::cout << ".. and dropped it" << std::endl;
+//                    std::cout << ".. and dropped it" << std::endl;
                     continue;
                 }
 
-                std::cout << std::endl;
+//                std::cout << std::endl;
 
                 // Update SEQ
                 // t->m_rx_seq = (++t->m_rx_seq % (ALAGG_MAX_SEQ));
@@ -67,9 +66,11 @@ bool LinkManager::recv_on_links(LinkManager *t) {
                  *   This is removed before delivering packets to client
                  */
 
-                buf.insert( buf.end(),
-                        raw_buf+sizeof(AlaggHeader),
-                        raw_buf+byte_rcvd );
+                Buffer *buf = new Buffer();
+                buf->assign(raw_buf+sizeof(AlaggHeader), raw_buf+byte_rcvd);
+//                buf->insert( buf->end(),
+//                        raw_buf+sizeof(AlaggHeader),
+//                        raw_buf+byte_rcvd );
 
                 // Debug
 //                print_buffer(buf.data(), buf.size());
@@ -111,19 +112,19 @@ LinkManager::~LinkManager() {
     }
 }
 
-int LinkManager::Send(Buffer const & buf) {
+int LinkManager::Send(Buffer const * buf) {
 
-    int packet_size = sizeof(AlaggPacket) + buf.size();
+    int packet_size = sizeof(AlaggPacket) + buf->size();
     AlaggPacket *packet = (AlaggPacket *) malloc(packet_size);
 
     // Construct packet
     bzero(packet, packet_size);
-    memcpy(packet->m_payload, buf.data(), buf.size());
+    memcpy(packet->m_payload, buf->data(), buf->size());
     packet->m_header.m_eth_header.ether_type = ETH_P_ALAGG;
     packet->m_header.m_seq = NextTxSeq();
 
     for( int i = 0; i < m_links.size(); i++ ) {
-        std::cout << "Sending " << packet->m_header.m_seq << " on link " << i << std::endl;
+//        std::cout << "Sending " << packet->m_header.m_seq << " on link " << i << std::endl;
         // Prepare ethernet header
         memcpy( packet->m_header.m_eth_header.ether_shost,
                 m_links[i]->OwnAddr().Addr().data(),
@@ -140,11 +141,11 @@ int LinkManager::Send(Buffer const & buf) {
     return 0;
 }
 
-Buffer const LinkManager::Recv() {
+Buffer * LinkManager::Recv() {
     if(Empty())
-        return Buffer();
+        return nullptr;
     else {
-        Buffer buf = Front();
+        Buffer *buf = Front();
         Pop();
         return buf;
     }
