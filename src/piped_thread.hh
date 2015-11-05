@@ -147,7 +147,15 @@ class PipedThread {
         m_thread.join();
     }
 
+    void * EmptyPipe() const {
+        char c[MSG_LEN];
+        int n = read(m_pipe.m_rx, c, MSG_LEN);
+        assert(n == MSG_LEN);
+    }
+
+
     int const PipeTxFd() const { return m_pipe.m_tx; }
+    int const PipeRxFd() const { return m_pipe.m_rx; }
 };
 
 #endif /* _PIPED_THREAD_HH_ */

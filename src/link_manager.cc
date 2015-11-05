@@ -2,6 +2,12 @@
 
 bool LinkManager::recv_on_links(LinkManager *t) {
 
+    /*
+     * Poll on links
+     */
+
+    int nfds_rdy = poll(t->m_link_pfds, t->m_link_nfds, -1);
+
     // Used for round-robin
     static unsigned int link_index = 0;
 
@@ -11,6 +17,11 @@ bool LinkManager::recv_on_links(LinkManager *t) {
     int idx;
 
     for( int i = 0; i < t->m_links.size(); i++ ) {
+
+        if(!(t->m_link_pfds[link_index].revents & LINK_POLL_EVENTS)) {
+                link_index = (link_index+1) % t->m_links.size();
+                continue;
+        }
 
         /*
          * Keep receiving on a link until a valid packet is received or no data
@@ -104,6 +115,18 @@ LinkManager::LinkManager(std::vector<std::string> peer_addresses,
 
     // Start the reception thread
     SetThread(recv_on_links, this, PipedThread::exec_repeat);
+
+    /*
+     * Construct struct pollfd[] for polling, and set the related events.
+     */
+
+    m_link_pfds = (struct pollfd *)
+        malloc(m_links.size() * sizeof(struct pollfd));
+    for(int i = 0; i < m_links.size(); i++) {
+        m_link_pfds[i].fd = m_links[i]->Socket();
+        m_link_pfds[i].events = LINK_POLL_EVENTS;
+    }
+    m_link_nfds = m_links.size();
 }
 
 LinkManager::~LinkManager() {
@@ -141,12 +164,14 @@ int LinkManager::Send(Buffer const * buf) {
     return 0;
 }
 
-Buffer * LinkManager::Recv() {
+Buffer const * LinkManager::Recv() {
     if(Empty())
         return nullptr;
     else {
         Buffer *buf = Front();
         Pop();
+        // Read a byte from the pipe stream
+        EmptyPipe();
         return buf;
     }
 }

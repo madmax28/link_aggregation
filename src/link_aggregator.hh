@@ -9,13 +9,19 @@
 #include "piped_thread.hh"
 #include "link_manager.hh"
 
+#include <poll.h>
 #include <vector>
+
+#define LAGG_POLL_EVENTS (POLLIN | POLLRDNORM | POLLRDBAND | POLLPRI)
 
 class LinkAggregator {
 
     Config      m_config;
     Client      m_client;
     LinkManager m_link_manager;
+
+    struct pollfd m_pfds[2];
+    nfds_t        m_nfds;
 
     private:
 
@@ -25,10 +31,13 @@ class LinkAggregator {
 
     LinkAggregator( const std::string config_filename = "default_config.cfg" );
 
-    Buffer * RecvPktFromClient();
+    // Main operation loop
+    void Aggregate();
+
+    Buffer const * RecvPktFromClient();
     int SendPktToClient( Buffer const * buf );
 
-    Buffer * RecvOnLinks();
+    Buffer const * RecvOnLinks();
     int SendOnLinks( Buffer const * buf );
 };
 

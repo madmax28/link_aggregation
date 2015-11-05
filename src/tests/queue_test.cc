@@ -6,25 +6,28 @@
 
 static unsigned long long n = 0;
 
-static void push(SafeQueue<int> *q) {
+static bool push(SafeQueue<int> *q) {
 
     std::stringstream m;
 
     q->Push(0);
     m << "Pushed. n=" << ++n << "\n";
     std::cout << m.str();
+    return true;
 }
 
-static void pop(SafeQueue<int> *q) {
+static bool pop(SafeQueue<int> *q) {
 
     std::stringstream m;
 
     try {
-        q->PopFront();
+        q->Pop();
         m << "Popped. n=" << (n == 0 ? 0 : --n) << std::endl;
         std::cout << m.str();
+        return true;
     } catch(...) {
         std::cout << "Queue empty\n";
+        return false;
     }
 }
 

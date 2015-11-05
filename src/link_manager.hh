@@ -9,19 +9,25 @@
 #include <vector>
 #include <string>
 #include <string.h>
+#include <poll.h>
+
+#define LINK_POLL_EVENTS (POLLIN | POLLRDNORM | POLLRDBAND | POLLPRI)
 
 class LinkManager
         : public SafeQueue<Buffer *>
         , public PipedThread {
 
     // Stores reordered packets ready to be delivered to the client
-    std::vector<Link *> m_links;
+    std::vector<Link *>  m_links;
+    struct pollfd       *m_link_pfds;
+    nfds_t               m_link_nfds;
 
-    unsigned short      m_tx_seq;
-    unsigned short      m_rx_seq;
+    unsigned short       m_tx_seq;
+    unsigned short       m_rx_seq;
 
     static bool recv_on_links(LinkManager *t);
     bool IsInSequence( unsigned short const seq ) const;
+    unsigned short NextTxSeq() { return (m_tx_seq++ % USHRT_MAX); }
 
     public:
 
@@ -29,9 +35,8 @@ class LinkManager
                 std::vector<std::string> if_names);
     ~LinkManager();
 
-    unsigned short NextTxSeq() { return (m_tx_seq++ % USHRT_MAX); }
     int Send(Buffer const * buf);
-    Buffer * Recv();
+    Buffer const * Recv();
 
     std::vector<Link *> const Links() const { return m_links; }
 };

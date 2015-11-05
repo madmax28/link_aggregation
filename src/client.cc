@@ -86,7 +86,7 @@ Buffer * Client::RecvPkt() {
     unsigned char *raw_buf;
     int pkt_len;
 
-    pkt_len = m_nfq_handler.GetPacket(&raw_buf);
+    pkt_len = GetPacket(&raw_buf);
 
     if( pkt_len > 0 ) {
         buf = new Buffer();

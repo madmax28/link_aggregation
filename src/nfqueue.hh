@@ -37,6 +37,8 @@ class NfqHandler {
     }
 
     int GetPacket( unsigned char **packet_buffer );
+
+    int const NfqNlFd() const { return m_nfq_nl_fd; }
 };
 
 #endif /* _NFQUEUE_HH_ */

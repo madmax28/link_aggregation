@@ -9,13 +9,51 @@
 
 LinkAggregator::LinkAggregator( const std::string config_filename )
         : m_config(config_filename)
-        , m_link_manager(m_config.PeerAddresses(), m_config.IfNames()) {
+        , m_link_manager(m_config.PeerAddresses()
+        , m_config.IfNames())
+        , m_nfds(2) {
+
+    m_pfds[0].fd = m_link_manager.PipeRxFd();
+    m_pfds[1].fd = m_client.RxFd();
+    m_pfds[0].events = LAGG_POLL_EVENTS;
+    m_pfds[1].events = LAGG_POLL_EVENTS;
 
     // Print config
     PrintConfig();
 }
 
-Buffer * LinkAggregator::RecvPktFromClient() {
+void LinkAggregator::Aggregate() {
+    Buffer const * buf;
+
+    for(;;) {
+
+        errno = 0;
+        int nfds_rdy = poll(m_pfds, m_nfds, -1);
+        assert_perror(errno);
+
+        if(m_pfds[1].revents & LAGG_POLL_EVENTS) {
+            // Receive from client
+            buf = RecvPktFromClient();
+            if(buf) {
+                // Got packet, forward to links
+                SendOnLinks(buf);
+                delete buf;
+            }
+        }
+
+        if(m_pfds[0].revents & LAGG_POLL_EVENTS) {
+            // Receive from links
+            buf = RecvOnLinks();
+            if(buf) {
+                // Got packet, forward to client
+                SendPktToClient(buf);
+                delete buf;
+            }
+        }
+    }
+}
+
+Buffer const * LinkAggregator::RecvPktFromClient() {
 
     return m_client.RecvPkt();
 }
@@ -48,7 +86,7 @@ int LinkAggregator::SendOnLinks( Buffer const * buf ) {
     return m_link_manager.Send(buf);
 }
 
-Buffer * LinkAggregator::RecvOnLinks() {
+Buffer const * LinkAggregator::RecvOnLinks() {
 
     return m_link_manager.Recv();
 }

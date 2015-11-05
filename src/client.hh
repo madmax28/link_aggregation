@@ -8,10 +8,9 @@
 #include "common.hh"
 #include "nfqueue.hh"
 
-class Client {
+class Client : NfqHandler {
 
     int m_socket;
-    NfqHandler m_nfq_handler;
 
     public:
 
@@ -20,6 +19,8 @@ class Client {
 
     Buffer * RecvPkt();
     int SendPkt( Buffer const * buf ) const;
+
+    int const RxFd() const { return NfqNlFd(); }
 };
 
 #endif /* _CLIENT_HH_ */
