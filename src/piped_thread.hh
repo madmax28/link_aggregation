@@ -54,8 +54,9 @@ class PipedThread {
 
         do {
             // Call fun, then notify pipe
-            if(fun())
-                t->NotifyPipe();
+            fun();
+//            if(fun())
+//                t->NotifyPipe();
         } while(t->m_mode == exec_repeat);
     }
 
@@ -64,8 +65,9 @@ class PipedThread {
 
         do {
             // Call fun, the notify pipe
-            if(fun(args))
-                t->NotifyPipe();
+            fun(args);
+//            if(fun(args))
+//                t->NotifyPipe();
         } while(t->m_mode == exec_repeat);
     }
 
@@ -90,6 +92,8 @@ class PipedThread {
         assert_perror(errno);
     }
 
+    public:
+
     void NotifyPipe() const {
         write(m_pipe.m_tx, MSG_DONE, MSG_LEN);
         if((errno == EAGAIN) || (errno == EWOULDBLOCK))
@@ -97,8 +101,6 @@ class PipedThread {
         else
             assert_perror(errno);
     }
-
-    public:
 
     /*
      * Constructors
@@ -152,7 +154,6 @@ class PipedThread {
         int n = read(m_pipe.m_rx, c, MSG_LEN);
         assert(n == MSG_LEN);
     }
-
 
     int const PipeTxFd() const { return m_pipe.m_tx; }
     int const PipeRxFd() const { return m_pipe.m_rx; }

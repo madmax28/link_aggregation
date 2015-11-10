@@ -1,6 +1,6 @@
 #include "link_manager.hh"
 
-bool LinkManager::recv_on_links(LinkManager *t) {
+void LinkManager::recv_on_links(LinkManager *t) {
 
     /*
      * Poll on links
@@ -11,7 +11,8 @@ bool LinkManager::recv_on_links(LinkManager *t) {
     // Used for round-robin
     static unsigned int link_index = 0;
 
-    unsigned char raw_buf[BUF_SIZE];
+//    std::cout << "Allocating buffer for reception" << std::endl;
+    unsigned char *raw_buf = (unsigned char *) malloc(BUF_SIZE);
     AlaggPacket *packet;
     int byte_rcvd;
     int idx;
@@ -61,51 +62,42 @@ bool LinkManager::recv_on_links(LinkManager *t) {
 
 //                std::cout << "Received packet " << packet->m_header.m_seq;
 
-                if( !t->IsInSequence(packet->m_header.m_seq) ) {
+//                if( !t->IsRecent(packet->m_header.m_seq) ) {
 //                    std::cout << ".. and dropped it" << std::endl;
-                    continue;
-                }
+//                    continue;
+//                }
 
 //                std::cout << std::endl;
-
-                // Update SEQ
-                // t->m_rx_seq = (++t->m_rx_seq % (ALAGG_MAX_SEQ));
-                t->m_rx_seq = packet->m_header.m_seq;
 
                 /*
                  * We do not return the Ethernet header
                  *   This is removed before delivering packets to client
                  */
+                // TODO : do this in pop func
 
-                Buffer *buf = new Buffer();
-                buf->assign(raw_buf+sizeof(AlaggHeader), raw_buf+byte_rcvd);
-//                buf->insert( buf->end(),
-//                        raw_buf+sizeof(AlaggHeader),
-//                        raw_buf+byte_rcvd );
+//                Buffer *buf = new Buffer();
+//                buf->assign(raw_buf+sizeof(AlaggHeader), raw_buf+byte_rcvd);
 
                 // Debug
 //                print_buffer(buf.data(), buf.size());
 
-                t->Push(buf);
+                t->Add(packet, byte_rcvd);
                 link_index = (link_index+1) % t->m_links.size();
-                return true;
+                return;
             }
         } while(true);
 
         link_index = (link_index+1) % t->m_links.size();
     }
 
-    return false;
-}
-
-bool LinkManager::IsInSequence( unsigned short const seq ) const {
-    return   ( (seq > m_rx_seq && (seq - m_rx_seq) < (ALAGG_MAX_SEQ/2))
-            || (seq < m_rx_seq && (m_rx_seq - seq) > (ALAGG_MAX_SEQ/2)) );
+//    std::cout << "Freeing a receive buffer" << std::endl;
+    free(raw_buf);
+//    std::cout << "Free ok" << std::endl;
 }
 
 LinkManager::LinkManager(std::vector<std::string> peer_addresses,
                          std::vector<std::string> if_names)
-                         : m_rx_seq(0)
+                         : PacketPool(ALAGG_REORDER_TTL)
                          , m_tx_seq(1) {
 
     // Initialize links
@@ -165,9 +157,9 @@ int LinkManager::Send(Buffer const * buf) {
 }
 
 Buffer const * LinkManager::Recv() {
-    if(Empty())
+    if(Empty()) {
         return nullptr;
-    else {
+    } else {
         Buffer *buf = Front();
         Pop();
         // Read a byte from the pipe stream

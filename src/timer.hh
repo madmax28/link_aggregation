@@ -19,7 +19,10 @@ class Timer {
 
     template<typename F, typename... A>
     Timer(uint32_t to_msec, F fun, A... args)
-          : m_t(std::thread(t<F, A...>, to_msec, fun, args...)) {}
+          : m_t(std::thread(t<F, A...>, to_msec, fun, args...)) {
+
+        m_t.detach();
+    }
 };
 
 #endif /* _TIMER_HH_ */

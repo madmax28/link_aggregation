@@ -9,8 +9,7 @@
 
 LinkAggregator::LinkAggregator( const std::string config_filename )
         : m_config(config_filename)
-        , m_link_manager(m_config.PeerAddresses()
-        , m_config.IfNames())
+        , m_link_manager(m_config.PeerAddresses(), m_config.IfNames())
         , m_nfds(2) {
 
     m_pfds[0].fd = m_link_manager.PipeRxFd();
@@ -23,33 +22,49 @@ LinkAggregator::LinkAggregator( const std::string config_filename )
 }
 
 void LinkAggregator::Aggregate() {
-    Buffer const * buf;
 
     for(;;) {
-
         errno = 0;
         int nfds_rdy = poll(m_pfds, m_nfds, -1);
         assert_perror(errno);
 
         if(m_pfds[1].revents & LAGG_POLL_EVENTS) {
-            // Receive from client
-            buf = RecvPktFromClient();
-            if(buf) {
-                // Got packet, forward to links
-                SendOnLinks(buf);
-                delete buf;
-            }
+            DeliveryChain();
         }
 
         if(m_pfds[0].revents & LAGG_POLL_EVENTS) {
-            // Receive from links
-            buf = RecvOnLinks();
-            if(buf) {
-                // Got packet, forward to client
-                SendPktToClient(buf);
-                delete buf;
-            }
+            ReceptionChain();
         }
+    }
+}
+
+void LinkAggregator::DeliveryChain() {
+
+    Buffer const * buf;
+
+    // Receive from client
+    buf = RecvPktFromClient();
+    if(buf) {
+        // Got packet, forward to links
+        SendOnLinks(buf);
+//        std::cout << "Freeing Buffer (tx chain)" << std::endl;
+        delete buf;
+//        std::cout << "Free ok" << std::endl;
+    }
+}
+
+void LinkAggregator::ReceptionChain() {
+
+    Buffer const * buf;
+
+    // Receive from links
+    buf = RecvOnLinks();
+    if(buf) {
+        // Got packet, forward to client
+        SendPktToClient(buf);
+//        std::cout << "Deleting buffer retrieved from pool\n";
+        delete buf;
+//        std::cout << "Free ok" << std::endl;
     }
 }
 

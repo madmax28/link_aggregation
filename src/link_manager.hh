@@ -4,6 +4,7 @@
 #include "piped_thread.hh"
 #include "safe_queue.hh"
 #include "link.hh"
+#include "packet_pool.hh"
 #include "common.hh"
 
 #include <vector>
@@ -15,19 +16,22 @@
 
 class LinkManager
         : public SafeQueue<Buffer *>
-        , public PipedThread {
+        , public PipedThread
+        , public PacketPool {
 
-    // Stores reordered packets ready to be delivered to the client
     std::vector<Link *>  m_links;
     struct pollfd       *m_link_pfds;
     nfds_t               m_link_nfds;
 
-    unsigned short       m_tx_seq;
-    unsigned short       m_rx_seq;
+    alagg_seq_t          m_tx_seq;
 
-    static bool recv_on_links(LinkManager *t);
-    bool IsInSequence( unsigned short const seq ) const;
-    unsigned short NextTxSeq() { return (m_tx_seq++ % USHRT_MAX); }
+    static void recv_on_links(LinkManager *t);
+    alagg_seq_t NextTxSeq() { return (m_tx_seq++ % USHRT_MAX); }
+
+    void PopPacketFromPool(Buffer * b) {
+        Push(b);
+        NotifyPipe();
+    }
 
     public:
 

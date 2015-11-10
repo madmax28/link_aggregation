@@ -8,6 +8,7 @@
 #include "safe_queue.hh"
 #include "piped_thread.hh"
 #include "link_manager.hh"
+#include "packet_pool.hh"
 
 #include <poll.h>
 #include <vector>
@@ -20,6 +21,7 @@ class LinkAggregator {
     Client      m_client;
     LinkManager m_link_manager;
 
+    // Used for asynchronous I/O on Client and Link (via LinkManager) reception
     struct pollfd m_pfds[2];
     nfds_t        m_nfds;
 
@@ -33,6 +35,9 @@ class LinkAggregator {
 
     // Main operation loop
     void Aggregate();
+
+    void DeliveryChain();
+    void ReceptionChain();
 
     Buffer const * RecvPktFromClient();
     int SendPktToClient( Buffer const * buf );

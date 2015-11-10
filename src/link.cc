@@ -45,7 +45,6 @@ Link::Link( std::string const ifname,
     // Get interface index
     memset( &ifr, 0, sizeof( ifr) );
     strncpy( ifr.ifr_name, ifname.c_str(), IFNAMSIZ - 1 );
-    std::cout << ifname.c_str() << std::endl;
     ioctl( m_socket, SIOCGIFINDEX, &ifr );
     assert_perror(errno);
     sll.sll_ifindex = ifr.ifr_ifindex;

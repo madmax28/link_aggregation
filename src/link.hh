@@ -1,6 +1,7 @@
 #ifndef _LINK_HH_
 #define _LINK_HH_
 
+#include <cstdint>
 #include <string>
 #include <unistd.h>
 #include <limits.h>
@@ -12,6 +13,10 @@
 // Definition of our ethernet type/protocol
 #define ETH_P_ALAGG 0x4242
 #define ALAGG_MAX_SEQ (USHRT_MAX)
+// Milliseconds
+#define ALAGG_REORDER_TTL 50
+
+typedef uint16_t alagg_seq_t;
 
 /*
  * ALAGG Header definition
@@ -19,7 +24,7 @@
 
 struct __attribute__ ((__packed__)) AlaggHeader {
     struct ether_header m_eth_header;
-    unsigned short m_seq;
+    alagg_seq_t m_seq;
 };
 
 /*
