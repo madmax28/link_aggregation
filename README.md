@@ -8,7 +8,7 @@ receiving side of the connection.
 Overview
 ========
 
-![Project Overview](../../figures/overview.png)
+![Project Overview](../../figures/png/overview.png)
 
 Alagg transparently proxies traffic destined for specific destinations.
 Traffic is intercepted using netfilter/iptables. The packets are enqueued in a
@@ -24,9 +24,23 @@ delivers it.
 Project Structure
 -----------------
 
-![Rx chain](../../figures/rx_chain.png)
-![Tx chain](../../figures/tx_chain.png)
 ![Class diagram](../../figures/png/lagg.png)
+
+The LinkAggregator class is the main class, and it's LinkAggregator::Aggregate()
+routine presents the projects main operation loop. The left side of the class
+diagram displays classes that are related to link transmission and reception.
+The LinkManager class is responsible for coordinating reception and transmission
+on the set of available links. It spawns a new instance of SafeThread for data
+reception and uses a SafeQueue instance to hand packets to the upper layer.
+It owns a set of Link classes which represent an interface to a single
+link/network interface.
+Client data reception (via netfilter) and transmission is facilitated by classes
+displayed on the right side of the diagram.
+This mainly includes the NfqHandler class, which performs packet reception from
+the netfilter queue residing in the kernel.
+
+For a detailed description of the included classes, visit the class tab and
+refer to the source.
 
 Building
 ========
