@@ -80,6 +80,48 @@ To remove previously setup rules:
 
 See also: `man iptables`
 
+TAP Transmission Interface
+--------------------------
+
+This project adds an additional header to raw packets. Client protocols likely
+create packets equal to the size of the used network interfaces Maximum
+transmission unit (MTU). This poses a problem. We can not intercept the packet
+and add an additional header, since this will exceed the size of the MTU.
+One option to deal with this would be to implement a packet fragmentation
+algorithm within the project. However, this would impose performance limitation
+on the application, and take a lot of time. A much easier way to bypass this
+problem is to create a virtual TAP interface having a smaller MTU, and routing
+traffic targeted for the `<destination_ip>` through this interface.
+
+This can be achieved by the following:
+
+Create Tap interface:
+
+    ip tuntap add tap0 mode tap
+
+Set it's MTU:
+
+    ip link set dev tap0 mtu 1450
+
+Assign an IP address:
+
+    ip addr add 192.168.42.42/24 dev tap0
+
+Up the device:
+
+    ip link set dev tap0 up
+
+Flush routing rules associated with the device:
+
+    ip route flush dev tap0
+
+Route traffic to destination through the TAP interface:
+
+    ip route add <desination_ip> dev tap0 kernel scope link src <desired_source_ip>
+
+The client application will now create packets with a size of the TAP
+interfaces' MTU.
+
 Linux kernel
 ------------
 
