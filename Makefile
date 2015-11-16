@@ -1,17 +1,19 @@
-BUILD_DIR=build
-APP_NAME=aggregator
+BUILD_DIR    = build
+APP_NAME     = aggregator
 
-GXX=g++
-GXXFLAGS=-std=c++11
+GXX          = g++
+GXXFLAGS     = -std=c++11
 
-LIBRARIES=-lnetfilter_queue -lnfnetlink -lpthread
-SOURCES=$(wildcard src/*.cc)
-HEADERS=$(wildcard src/*.hh)
-TARGET=$(addprefix $(BUILD_DIR)/, $(APP_NAME))
+LIBRARIES    = -lnetfilter_queue -lnfnetlink -lpthread
+SOURCES      = $(wildcard src/*.cc)
+HEADERS      = $(wildcard src/*.hh)
+TARGET       = $(addprefix $(BUILD_DIR)/, $(APP_NAME))
 
-DOXYGEN=doxygen
-DOXYGEN_DIR=doxygen
-DOXYFILE=Doxyfile
+DOXYGEN      = doxygen
+DOXYGEN_DIR  = doxygen
+DOXYFILE     = Doxyfile
+
+DOXYGEN_MAIN = $(DOXYGEN_DIR)/html/index.html
 
 .PHONY: default all clean doxygen
 
@@ -23,9 +25,11 @@ $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 
 $(TARGET): $(BUILD_DIR) $(SOURCES) $(HEADERS)
-	$(GXX) $(GXXFLAGS) -o $(TARGET) $(SOURCES) $(LIBRARIES) 
+	$(GXX) $(GXXFLAGS) -o $(TARGET) $(SOURCES) $(LIBRARIES)
 
-doxygen: $(SOURCES) $(HEADERS)
+doxygen: $(DOXYGEN_MAIN)
+
+$(DOXYGEN_MAIN): $(DOXYFILE) $(SOURCES) $(HEADERS)
 	$(DOXYGEN) $(DOXYFILE)
 
 clean:

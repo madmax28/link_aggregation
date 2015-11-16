@@ -1,4 +1,4 @@
-Link Layer Link Aggregation (Alagg)                                     {#mainpage}
+%Link Layer %Link Aggregation (Alagg)                                     {#mainpage}
 ================================
 
 Alagg is a protocol-agnostic, bidirectional link aggregator operating in user
@@ -12,6 +12,28 @@ layer on a predetermined set of local network interfaces and remote MAC
 destination addresseses. The receiving end tries to perofrm packet reordering on
 the basis of sequence numbers that are part of the Alagg header, unwraps the
 original packet and delivers it.
+
+Overview
+========
+
+
+
+Building
+========
+
+To build the project, simply run
+
+    make
+
+Doxygen documentation can be created using
+
+    make doxygen
+
+Dependencies
+------------
+
+The project depends on the `libnfnetlink` and `libnetfilter_queue` libraries.
+These must be installed to be able to compile.
 
 Setup
 =====
@@ -31,6 +53,8 @@ The current iptables rules can be shown using:
 To remove previously setup rules:
 
     iptables -t nat -D OUTPUT <index>
+
+See also: `man iptables`
 
 Linux kernel
 ------------
