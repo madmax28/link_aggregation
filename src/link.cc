@@ -3,46 +3,46 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <linux/if_packet.h> // AF_PACKET
-#include <netinet/ip.h>      // htons()
-#include <arpa/inet.h>       // inet_ntoa()
+#include <linux/if_packet.h>
+#include <netinet/ip.h>
+#include <arpa/inet.h>
 
-#include <net/if.h>          // Binding a socket to an interface
+#include <net/if.h>
 #include <sys/ioctl.h>
 
-#include <fcntl.h>           // fcntl()
+#include <fcntl.h>
 
 #include "link.hh"
 
+/**
+ * Link class constructor
+ *
+ * Constructs a new Link object.
+ *
+ * Link sockets are of type
+ *   socket( AF_PACKET, SOCK_RAW, ETH_P_ALAGG )
+ * These sockets include the ethernet header, which we have to fill manually
+ * before sending.
+ *
+ * @param ifname Name of the interface to be bound to.
+ * @param mac_addr_str String containing the peer's MAC address.
+ */
 Link::Link( std::string const ifname,
         std::string const mac_addr_str )
         : m_peer_addr(mac_addr_str)
         , m_if_name(ifname) {
 
-    /*
-     * Link sockets are of type
-     *   socket( AF_PACKET, SOCK_RAW, ETH_P_ALAGG )
-     * These sockets include the ethernet header, which we
-     * to fill out manually before sending.
-     * The ethernet header consists of:
-     *   - source MAC address
-     *   - destination MAC address
-     *   - ethernet type
-     */
+    // Create the socket
     m_socket = socket( AF_PACKET, SOCK_RAW, htons(ETH_P_ALAGG) );
     assert_perror(errno);
 
-    /*
-     * Bind the socket to the provided interface
-     */
-
+    // Get interface index
     struct ifreq ifr;
     struct sockaddr_ll sll;
     memset( &sll, 0, sizeof( sll) );
     sll.sll_family = AF_PACKET;
     sll.sll_protocol = htons(ETH_P_ALAGG);
 
-    // Get interface index
     memset( &ifr, 0, sizeof( ifr) );
     strncpy( ifr.ifr_name, ifname.c_str(), IFNAMSIZ - 1 );
     ioctl( m_socket, SIOCGIFINDEX, &ifr );

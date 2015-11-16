@@ -1,17 +1,18 @@
 #!/bin/bash
-#
+
+# Must be root
+[ `id -u` == "0" ] || { echo "Must be root."; exit; }
+
 # Necessary setup for iptables. Without this, the application
 # will not be able to intercept the client application's traffic.
 #
 # This rule redirects any traffic designated to -d <ip>
-# to the local host. The IP header's destination address
-# is changed to 127.0.0.1
+# the netfilter queue <id>, from where the proxy application will retrieve
+# the packets at a later time using the nfqueue library.
 #
-# The used port is preserved
-#
-# Note: iptables must be set up before starting the client application
+# NOTE: iptables must be set up before starting the client application
 
-iptables -t nat -A OUTPUT -d 127.0.10.10 -j REDIRECT
+iptables -A OUTPUT -d 192.168.123.123 -j NFQUEUE --queue-num 0
 
 # To remove:
 #   iptables -t nat -D OUTPUT <num>

@@ -6,8 +6,25 @@
 
 #include "nfqueue.hh"
 
+/**
+ * The id of the netfilter queue that will be used.
+ */
 #define NFQ_QUEUE_NUM 0
 
+/**
+ * The Nfqueue callback function.
+ *
+ * This function is called when a packet is handle via nfq_handle_packet(). We
+ * simply receive packet, store it in the NfqCbArgs structure, and tell the
+ * kernel to drop it.
+ *
+ * @param nfq Nfqueue handle
+ * @param pkt Nfqueue packet data
+ * @param nfa Nfqueue packet meta data
+ * @param data User-specified pointer to arguments. This is a pointer to
+ * NfqCbARgs.
+ * @returns The return value of the underlying nfq_set_verdict() call.
+ */
 int NfqHandler::NfqCallbackFun( struct nfq_q_handle *nfq,
         struct nfgenmsg *pkt,
         struct nfq_data *nfa,
@@ -15,21 +32,27 @@ int NfqHandler::NfqCallbackFun( struct nfq_q_handle *nfq,
 
     NfqCbArgs *args = (NfqCbArgs *) data;
 
+    // Get stuff from nfqueue
     struct nfqnl_msg_packet_hdr *nf_header;
     nf_header = nfq_get_msg_packet_hdr(nfa);
     uint32_t id = ntohl(nf_header->packet_id);
 
-    // Treat packet
+    // Store the packet in NfqCbArgs
     int ret = nfq_get_payload( nfa, &(args->mp_packet) );
     if( ret == -1 ) {
         std::cerr << "ERROR: could not receive payload" << std::endl;
     }
     args->m_packet_len = ret;
 
-    // We drop the packet here
+    // We tell the kernel to drop the packet here
     return nfq_set_verdict( nfq, id, NF_DROP, 0, NULL);
 }
 
+/**
+ * NfqHandler class constructor
+ *
+ * Sets up the Nfqueue library.
+ */
 NfqHandler::NfqHandler()
         : m_nfq_handle(nfq_open()) {
 
@@ -89,6 +112,12 @@ NfqHandler::NfqHandler()
     }
 }
 
+/**
+ * Receive a packet from the netfilter queue.
+ *
+ * @param packet Pointer to the buffer to be filled with the packet data.
+ * @returns The size of the received packet.
+ */
 int NfqHandler::GetPacket( unsigned char **packet ) {
 
     int ret = recv( m_nfq_nl_fd, m_nfq_buffer, sizeof(m_nfq_buffer), 0 );

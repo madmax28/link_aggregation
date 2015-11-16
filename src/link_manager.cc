@@ -1,24 +1,36 @@
 #include "link_manager.hh"
 
+/**
+ * Link reception chain
+ *
+ * Polls on the aggregated links for reception readiness, and receives on links
+ * in a round-robin fashion.
+ * If an outdated packet is received on a Link, it is dropped and another
+ * reception attempt is made on the same Link. This avoids degeneration of a
+ * Link's 'freshness'.
+ *
+ * @param t Back-reference to the calling instance of LinkManager
+ * @see PacketPool
+ */
 void LinkManager::recv_on_links(LinkManager *t) {
 
-    /*
-     * Poll on links
-     */
+    AlaggPacket *packet;
+    int byte_rcvd;
+    int idx;
 
+    // Poll on links
     int nfds_rdy = poll(t->m_link_pfds, t->m_link_nfds, -1);
 
     // Used for round-robin
     static unsigned int link_index = 0;
 
-//    std::cout << "Allocating buffer for reception" << std::endl;
+    // Allocate new buffer
     unsigned char *raw_buf = (unsigned char *) malloc(BUF_SIZE);
-    AlaggPacket *packet;
-    int byte_rcvd;
-    int idx;
 
+    // Loop over Links
     for( int i = 0; i < t->m_links.size(); i++ ) {
 
+        // Check if link ready. If not, ask next link.
         if(!(t->m_link_pfds[link_index].revents & LINK_POLL_EVENTS)) {
                 link_index = (link_index+1) % t->m_links.size();
                 continue;
@@ -28,8 +40,6 @@ void LinkManager::recv_on_links(LinkManager *t) {
          * Keep receiving on a link until a valid packet is received or no data
          * is available (EAGAIN, EWOULDBLOCK)
          */
-
-//        std::cout << "link " << link_index << std::endl;
 
         do {
             byte_rcvd = recv( t->m_links[link_index]->Socket(),
@@ -55,32 +65,10 @@ void LinkManager::recv_on_links(LinkManager *t) {
 
                 packet = (AlaggPacket *) raw_buf;
 
-                /*
-                 * If the packet is not in sequence, drop it.
-                 * Else, accept it and update rx seq.
-                 */
-
-//                std::cout << "Received packet " << packet->m_header.m_seq;
-
-//                if( !t->IsRecent(packet->m_header.m_seq) ) {
-//                    std::cout << ".. and dropped it" << std::endl;
-//                    continue;
-//                }
-
-//                std::cout << std::endl;
-
-                /*
-                 * We do not return the Ethernet header
-                 *   This is removed before delivering packets to client
-                 */
-                // TODO : do this in pop func
-
-//                Buffer *buf = new Buffer();
-//                buf->assign(raw_buf+sizeof(AlaggHeader), raw_buf+byte_rcvd);
-
                 // Debug
-//                print_buffer(buf.data(), buf.size());
+                // print_buffer(buf.data(), buf.size());
 
+                // Push the packet to the PacketPool
                 t->Add(packet, byte_rcvd);
                 link_index = (link_index+1) % t->m_links.size();
                 return;
@@ -90,11 +78,24 @@ void LinkManager::recv_on_links(LinkManager *t) {
         link_index = (link_index+1) % t->m_links.size();
     }
 
-//    std::cout << "Freeing a receive buffer" << std::endl;
+    // No packet could be received, free the allocated buffer
     free(raw_buf);
-//    std::cout << "Free ok" << std::endl;
 }
 
+/**
+ * LinkManager class constructor.
+ *
+ * Initializes the aggregated links and starts the Link reception thread.
+ *
+ * @param peer_addresses Vector of the link peers' addresses as string.
+ * @param if_names Vector of the interface names associated with the peers, as
+ * strings.
+ *
+ * @see Link
+ * @see SafeQueue
+ * @see PipedThread
+ * @see PacketPool
+ */
 LinkManager::LinkManager(std::vector<std::string> peer_addresses,
                          std::vector<std::string> if_names)
                          : PacketPool(ALAGG_REORDER_TTL)
@@ -108,10 +109,7 @@ LinkManager::LinkManager(std::vector<std::string> peer_addresses,
     // Start the reception thread
     SetThread(recv_on_links, this, PipedThread::exec_repeat);
 
-    /*
-     * Construct struct pollfd[] for polling, and set the related events.
-     */
-
+    // Construct struct pollfd[] for polling, and set the related events.
     m_link_pfds = (struct pollfd *)
         malloc(m_links.size() * sizeof(struct pollfd));
     for(int i = 0; i < m_links.size(); i++) {
@@ -121,12 +119,28 @@ LinkManager::LinkManager(std::vector<std::string> peer_addresses,
     m_link_nfds = m_links.size();
 }
 
+/**
+ * LinkManager class desctructor.
+ *
+ * Deallocates the associated Link objects.
+ *
+ * @see Link
+ */
 LinkManager::~LinkManager() {
     for(int i = 0; i < m_links.size(); i++) {
         delete m_links[i];
     }
 }
 
+/**
+ * Link transmission.
+ *
+ * Send a packet via the aggregated links.
+ *
+ * @param buf Buffer object containing the packet to be sent.
+ * @returns The return value of the underlying send() call.
+ * @see Link
+ */
 int LinkManager::Send(Buffer const * buf) {
 
     int packet_size = sizeof(AlaggPacket) + buf->size();
@@ -138,8 +152,8 @@ int LinkManager::Send(Buffer const * buf) {
     packet->m_header.m_eth_header.ether_type = ETH_P_ALAGG;
     packet->m_header.m_seq = NextTxSeq();
 
+    // Loop over links
     for( int i = 0; i < m_links.size(); i++ ) {
-//        std::cout << "Sending " << packet->m_header.m_seq << " on link " << i << std::endl;
         // Prepare ethernet header
         memcpy( packet->m_header.m_eth_header.ether_shost,
                 m_links[i]->OwnAddr().Addr().data(),
@@ -156,6 +170,20 @@ int LinkManager::Send(Buffer const * buf) {
     return 0;
 }
 
+/**
+ * Link reception.
+ *
+ * Hook function to receive on the aggregated links. Note that actual link
+ * reception is perform by LinkManager::recv_on_links(). After received packets
+ * traverse the PacketPool, they are pushed to a SafeQueue object and then ready
+ * for further processing.
+ * This function simply performs SafeQueue::Pop() routine.
+ *
+ * @returns Pointer to a the Buffer objects containing the received packet, or
+ * nullptr, if the the SafeQueue is empty.
+ * @see SafeQueue
+ * @see PacketPool
+ */
 Buffer const * LinkManager::Recv() {
     if(Empty()) {
         return nullptr;
