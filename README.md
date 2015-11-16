@@ -1,22 +1,32 @@
-%Link Layer %Link Aggregation (Alagg)                                     {#mainpage}
+%Link Aggregation (Alagg)                                     {#mainpage}
 ================================
 
 Alagg is a protocol-agnostic, bidirectional link aggregator operating in user
 space. The application is operating on both the transmitting as well as the
 receiving side of the connection.
 
-It transparently proxies traffic destined for (a) specific destination(s) using
-netfilter/iptables. The intercepted raw IP packets are wrapped inside a trivial
-link layer protocol (the Alagg protocol) and are reduntantly sent in the link
-layer on a predetermined set of local network interfaces and remote MAC
-destination addresseses. The receiving end tries to perofrm packet reordering on
-the basis of sequence numbers that are part of the Alagg header, unwraps the
-original packet and delivers it.
-
 Overview
 ========
 
+![Project Overview](../../figures/overview.png)
 
+Alagg transparently proxies traffic destined for specific destinations.
+Traffic is intercepted using netfilter/iptables. The packets are enqueued in a
+netfilter queue in the kernel, rather than sent on the network. The Application
+can then retreive the intercepted packets using the nfnetlink/netfilter\_queue
+libraries, and the kernel is told to drop the packet.
+The intercepted raw IP packets are wrapped inside a small link layer protocol
+(the Alagg protocol) and reduntantly transmitted in the link layer.
+The receiving end tries to perform packet reordering on the basis of sequence
+numbers that are part of the Alagg header, unwraps the original packet and
+delivers it.
+
+Project Structure
+-----------------
+
+![Rx chain](../../figures/rx_chain.png)
+![Tx chain](../../figures/tx_chain.png)
+![Class diagram](../../figures/png/lagg.png)
 
 Building
 ========
@@ -85,4 +95,3 @@ Application parameters
 Parameters needed by the application are the local network interface names and
 the corresponding remote MAC addresses. These are set up using a .cfg file. See
 the `default_config.cfg` file that was shipped for an example.
-
