@@ -8,7 +8,7 @@ receiving side of the connection.
 Overview
 ========
 
-![Project Overview](figures/png/overview.png)
+![Project Overview](../../figures/png/overview.png)
 
 Alagg transparently proxies traffic destined for specific destinations.
 Traffic is intercepted using netfilter/iptables. The packets are enqueued in a
@@ -24,7 +24,7 @@ delivers it.
 Project Structure
 -----------------
 
-![Class diagram](figures/png/lagg.png)
+![Class diagram](../../figures/png/lagg.png)
 
 The LinkAggregator class is the main class, and it's LinkAggregator::Aggregate()
 routine presents the projects main operation loop. The left side of the class
