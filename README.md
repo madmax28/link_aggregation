@@ -1,5 +1,5 @@
-%Link Aggregation (Alagg)                                     {#mainpage}
-================================
+Link Aggregation (Alagg)
+========================
 
 Alagg is a protocol-agnostic, bidirectional link aggregator operating in user
 space. The application is operating on both the transmitting as well as the
