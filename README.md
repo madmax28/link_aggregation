@@ -1,4 +1,4 @@
-%Protocol-Agnostic Link Aggregator (Alagg)
+Protocol-Agnostic Link Aggregator (Alagg)
 ========================
 
 Alagg is a protocol-agnostic, bidirectional link aggregator operating in user
