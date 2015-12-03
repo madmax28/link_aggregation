@@ -117,7 +117,7 @@ Flush routing rules associated with the device:
 
 Route traffic to destination through the TAP interface:
 
-    ip route add <desination_ip> dev tap0 kernel scope link src <desired_source_ip>
+    ip route add <desination_ip> dev tap0 proto kernel scope link src <desired_source_ip>
 
 The client application will now create packets with a size of the TAP
 interfaces' MTU.
