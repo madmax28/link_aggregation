@@ -1,4 +1,4 @@
-Link Aggregation (Alagg)
+Protocol-Agnostic Link Aggregator (Alagg)
 ========================
 
 Alagg is a protocol-agnostic, bidirectional link aggregator operating in user
@@ -39,8 +39,8 @@ displayed on the right side of the diagram.
 This mainly includes the NfqHandler class, which performs packet reception from
 the netfilter queue residing in the kernel.
 
-For a detailed description of the included classes, visit the class tab and
-refer to the source.
+For a detailed description of the included classes, build the doxygen
+documentation and refer to the source.
 
 Building
 ========
