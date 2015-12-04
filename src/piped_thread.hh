@@ -219,7 +219,7 @@ class PipedThread {
     /**
      * Read one MSG_DONE from the pipe.
      */
-    void * EmptyPipe() const {
+    void EmptyPipe() const {
         char c[MSG_LEN];
         int n = read(m_pipe.m_rx, c, MSG_LEN);
         assert(n == MSG_LEN);
